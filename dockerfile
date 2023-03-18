@@ -1,6 +1,6 @@
 FROM node:14
 
-WORKDIR /Apptivt-Scraper-Api
+WORKDIR /app
 
 COPY package*.json ./
 
