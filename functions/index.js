@@ -12,8 +12,9 @@ const categories = [
   // ... more categories here
   { id: 24, name: "Tennis", selected: true },
 ];
-
+functions.timeout = 60000;
 async function scrapeGoogleMapsActivities() {
+  console.log("scrapeGoogleMapsActivities() called");
   const browser = await puppeteer.launch({
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -23,7 +24,11 @@ async function scrapeGoogleMapsActivities() {
 
   for (const category of categories) {
     if (category.selected) {
-      await page.goto(`https://www.google.com/maps/search/`);
+      await page.goto(
+        `https://www.google.com/maps/search/${encodeURIComponent(
+          category.name
+        )}`
+      );
 
       const activityData = await page.evaluate(() => {
         const activityElements = Array.from(
@@ -54,11 +59,7 @@ async function scrapeGoogleMapsActivities() {
       });
       console.log("results:", results);
     } else {
-      results.push({
-        categoryId: category.id,
-        categoryName: category.name,
-        activities: [],
-      });
+      console.log(`Skipping category ${category.name}`);
     }
   }
 
@@ -66,15 +67,14 @@ async function scrapeGoogleMapsActivities() {
   return results;
 }
 
-app.get("/scrapeGoogleMapsActivities", async (req, res) => {
+app.get("/", async (req, res) => {
   try {
     const results = await scrapeGoogleMapsActivities();
     res.status(200).send(results);
   } catch (error) {
-    console.error("Error in scrapeGoogleMapsActivities:", error.stack);
     res
       .status(500)
-      .send({ message: "An error occurred while scraping activities." });
+      .send({ error, message: "An error occurred while scraping activities." });
   }
 });
 
