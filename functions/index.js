@@ -8,11 +8,11 @@ const app = express();
 app.use(cors({ origin: true }));
 
 const categories = [
-  { id: 1, name: "Arts & Crafts", selected: true },
+  { id: 1, name: "Boxing", selected: true },
   // ... more categories here
   { id: 24, name: "Tennis", selected: true },
 ];
-functions.timeout = 60000;
+
 async function scrapeGoogleMapsActivities() {
   console.log("scrapeGoogleMapsActivities() called");
   const browser = await puppeteer.launch({
@@ -42,8 +42,10 @@ async function scrapeGoogleMapsActivities() {
           const address =
             element.querySelector(".section-result-location span")?.innerText ||
             "";
+          console.log(address);
           const rating =
             element.querySelector(".section-result-rating")?.innerText || "";
+          console.log(title);
           return {
             title,
             address,
@@ -70,12 +72,25 @@ async function scrapeGoogleMapsActivities() {
 app.get("/", async (req, res) => {
   try {
     const results = await scrapeGoogleMapsActivities();
-    res.status(200).send(results);
+    const response = JSON.stringify(results, (key, value) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.indexOf(value) !== -1) {
+          return;
+        }
+        seen.push(value);
+      }
+      return value;
+    });
+    res.status(200).send(response);
   } catch (error) {
-    res
-      .status(500)
-      .send({ error, message: "An error occurred while scraping activities." });
+    res.status(500).send({
+      error,
+      message: "An error occurred while scraping activities.",
+      req,
+    });
   }
 });
 
-exports.scrapeGoogleMapsActivities = functions.https.onRequest(app);
+exports.scrapeGoogleMapsActivities = functions
+  .region("europe-west3")
+  .https.onRequest(app);

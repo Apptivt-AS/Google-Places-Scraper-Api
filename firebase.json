@@ -5,8 +5,8 @@
       "codebase": "default",
       "runtime": "nodejs16",
       "resources": {
-        "timeoutSeconds": 300,
-        "memory": "2GB"
+        "timeOutSeconds": 300,
+        "memoryLimit": "2GB"
       },
       "lint": [
         {
