@@ -71,6 +71,7 @@ async function scrapeGoogleMapsActivities() {
 
 app.get("/", async (req, res) => {
   try {
+    const seen = [];
     const results = await scrapeGoogleMapsActivities();
     const response = JSON.stringify(results, (key, value) => {
       if (typeof value === "object" && value !== null) {
