@@ -54,10 +54,23 @@ async function scrapeGoogleMapsActivities() {
         });
       });
 
+      const seen = new WeakSet();
+      const activityDataWithoutCircularRefs = JSON.parse(
+        JSON.stringify(activityData, (key, value) => {
+          if (typeof value === "object" && value !== null) {
+            if (seen.has(value)) {
+              return null;
+            }
+            seen.add(value);
+          }
+          return value;
+        })
+      );
+
       results.push({
         categoryId: category.id,
         categoryName: category.name,
-        activities: activityData,
+        activities: activityDataWithoutCircularRefs,
       });
       console.log("results:", results);
     } else {
