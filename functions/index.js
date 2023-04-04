@@ -32,45 +32,31 @@ async function scrapeGoogleMapsActivities() {
 
       const activityData = await page.evaluate(() => {
         const activityElements = Array.from(
-          document.querySelectorAll(".section-result")
+          document.querySelectorAll(".bfdHYd.Ppzolf.OFBs3e")
         );
         console.log("activityElements:", activityElements);
         return activityElements.map((element) => {
-          const title = element.querySelector(
-            ".section-result-title span"
-          ).innerText;
-          const address =
-            element.querySelector(".section-result-location span")?.innerText ||
-            "";
-          console.log(address);
-          const rating =
-            element.querySelector(".section-result-rating")?.innerText || "";
-          console.log(title);
+          const name = element.querySelector(".qBF1Pd").innerText;
+          const rating = element.querySelector(".ZkP5Je").innerText;
+          const address = element.querySelectorAll(".W4Efsd")[0].innerText;
+          const status = element.querySelectorAll(".W4Efsd")[1].innerText;
+
+          const img = element.querySelector("img");
+          const imageSrc = img ? img.getAttribute("src") : null;
+
           return {
-            title,
-            address,
+            name,
             rating,
+            address,
+            status,
+            imageSrc,
           };
         });
       });
 
-      const seen = new WeakSet();
-      const activityDataWithoutCircularRefs = JSON.parse(
-        JSON.stringify(activityData, (key, value) => {
-          if (typeof value === "object" && value !== null) {
-            if (seen.has(value)) {
-              return null;
-            }
-            seen.add(value);
-          }
-          return value;
-        })
-      );
-
       results.push({
-        categoryId: category.id,
-        categoryName: category.name,
-        activities: activityDataWithoutCircularRefs,
+        category: category.name,
+        activities: activityData,
       });
       console.log("results:", results);
     } else {
