@@ -17,7 +17,7 @@ app.get("/", async (req, res) => {
       "https://maps.googleapis.com/maps/api/place/textsearch/json",
       {
         params: {
-          query: "Guided Tours in Norway",
+          query: "Beach Activities",
           key: apiKey,
           region: "no", // Add this line to limit the search to Norway
           radius: 10000,
@@ -25,27 +25,18 @@ app.get("/", async (req, res) => {
       }
     );
     const results = response.data.results.map((result) => ({
-      id: result.place_id,
       name: result.name,
-      business_status: result.business_status,
-      rating: rating || "",
-      openingHours: [result.opening_hours],
-      currentOpenStatus: [result.current_opening_hours],
-      totalRating: [result.user_ratings_total] || "",
+      rating: result.rating || "",
       address: result.formatted_address,
       status: "",
-      website: result.website || "",
-      phone: result.formatted_phone_number || "",
       coordinates: {
         lat: result.geometry.location.lat,
         lng: result.geometry.location.lng,
       },
-      description: result.editorial_summary || "", // You can use 'formatted_phone_number' as a description if available
+      description: result.formatted_phone_number || "", // You can use 'formatted_phone_number' as a description if available
       imageSrc: result.photos
         ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${result.photos[0].photo_reference}&key=${apiKey}`
         : null,
-      photos: [result.photos],
-      reviews: [result.reviews],
     }));
 
     // Save activities to Firestore
@@ -72,32 +63,31 @@ app.get("/", async (req, res) => {
         const activityRef = db.collection("Activities-mainDB").doc();
         await activityRef.set({
           id: newId,
-          placeId: activity.id,
           title: activity.name,
-          description: activity.description,
-          business_status: activity.business_status,
+          description: "Main description",
           mainImage: activity.imageSrc,
-          images: activity.photos,
+          images: activity.imageSrc ? [activity.imageSrc] : [],
           coordinate: new admin.firestore.GeoPoint(
             activity.coordinates.lat,
             activity.coordinates.lng
           ),
-          categories: ["13"],
-          rating: activity.rating,
-          totalRating: activity.totalRating,
-          openingHours: activity.openingHours,
-          currentOpenStatus: activity.currentOpenStatus,
-          website: activity.website,
-          phone: activity.phone,
+          categories: ["2", "1"],
+          price: {
+            currency: "NOK",
+            amount: 200,
+          },
+          remainingTickets: 5,
+          duration: null,
+          date: "2021-12-31",
+          host: "",
           address: activity.address,
-          reviews: activity.reviews,
         });
       }
     }
 
     res
       .status(200)
-      .send(JSON.stringify({ category: "Guided Tours", activities: results }));
+      .send(JSON.stringify({ category: "skiing", activities: results }));
   } catch (error) {
     res.status(500).send({
       error,
